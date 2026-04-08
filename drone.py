@@ -18,6 +18,7 @@ cQ   = 7.6517e-11   # N·m·s²/rad²
 g    = 9.81         # m/s²
 
 
+plt.close('all')
 
 def quadrotor_ode(t, state, inputs):
     x, y, z, xd, yd, zd, phi, theta, psi, p, q, r = state
@@ -59,28 +60,63 @@ state0 = [0, 0, 0,      #position
           0, 0, 0,      #euler angles
           0, 0, 0]      #angular velocity in the body frame
 
-# Hover Thrust 
-T_hover = m * g
-inputs = [T_hover, 0.003, 0, 0] #Tsigma, tau_1, tau_2, tau_3 
-
-           
+def inputs(t):
+    T    = m * g
+    tau1 = 2e-5 * np.sin(2 * 2*np.pi * t)    # 10x larger
+    tau2 = 2e-5 * np.sin(2.3 * 2*np.pi * t)
+    tau3 = 2e-5 * np.sin(3 * 2*np.pi * t)
+    return [T, tau1, tau2, tau3]
 t_span = (0, 5)
 t_eval = np.linspace(0, 5, 1000)
 
-sol = solve_ivp(quadrotor_ode, t_span, state0,
-                args=(inputs,), t_eval=t_eval,
+sol = solve_ivp(lambda t, s: quadrotor_ode(t, s, inputs(t)), t_span, state0, t_eval=t_eval,
                 method='RK45', rtol=1e-8, atol=1e-10)
-fig, axes = plt.subplots(2, 1, figsize=(9, 6), sharex=True)
+
+plt.close("all")
+fig, axes = plt.subplots(3, 1, figsize=(9, 6), sharex=True)
 
 axes[0].plot(sol.t, sol.y[0], color='steelblue')
 axes[0].set_ylabel('x (m)')
 axes[0].set_title('Quadrotor Position (hover + roll torque)')
 axes[0].grid(True)
 
-axes[1].plot(sol.t, sol.y[2], color='darkorange')
-axes[1].set_ylabel('z (m)')
-axes[1].set_xlabel('Time (s)')
+axes[1].plot(sol.t, sol.y[1], color='forestgreen')
+axes[1].set_ylabel('y (m)')
 axes[1].grid(True)
+
+axes[2].plot(sol.t, sol.y[2], color='darkorange')
+axes[2].set_ylabel('z (m)')
+axes[2].set_xlabel('Time (s)')
+axes[2].grid(True)
+
+
+fig2, axes2 = plt.subplots(3, 1, figsize=(9, 6), sharex=True)
+fig2.suptitle('Euler Angles (ZYX convention)')
+axes2[0].plot(sol.t, np.degrees(sol.y[6]), color='steelblue')
+axes2[0].set_ylabel('φ (deg)')
+axes2[0].grid(True)
+axes2[1].plot(sol.t, np.degrees(sol.y[7]), color='forestgreen')
+axes2[1].set_ylabel('θ (deg)')
+axes2[1].grid(True)
+axes2[2].plot(sol.t, np.degrees(sol.y[8]), color='darkorange')
+axes2[2].set_ylabel('ψ (deg)')
+axes2[2].set_xlabel('Time (s)')
+axes2[2].grid(True)
+
+
+fig3, axes3 = plt.subplots(3, 1, figsize=(9, 6), sharex=True)
+fig3.suptitle('Body Rates (body frame)')
+axes3[0].plot(sol.t, sol.y[9], color='steelblue')
+axes3[0].set_ylabel('p (rad/s)')
+axes3[0].grid(True)
+axes3[1].plot(sol.t, sol.y[10], color='forestgreen')
+axes3[1].set_ylabel('q (rad/s)')
+axes3[1].grid(True)
+axes3[2].plot(sol.t, sol.y[11], color='darkorange')
+axes3[2].set_ylabel('r (rad/s)')
+axes3[2].set_xlabel('Time (s)')
+axes3[2].grid(True)
+
 
 plt.tight_layout()
 plt.show()
