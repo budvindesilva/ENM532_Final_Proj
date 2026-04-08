@@ -60,8 +60,8 @@ state0 = [0, 0, 0,      #position
           0, 0, 0]      #angular velocity in the body frame
 
 # Hover Thrust 
-T_hover = m * g * 1.1
-inputs = [T_hover, 0, 0, 0] #Tsigma, tau_1, tau_2, tau_3 
+T_hover = m * g
+inputs = [T_hover, 0.003, 0, 0] #Tsigma, tau_1, tau_2, tau_3 
 
            
 t_span = (0, 5)
@@ -70,10 +70,17 @@ t_eval = np.linspace(0, 5, 1000)
 sol = solve_ivp(quadrotor_ode, t_span, state0,
                 args=(inputs,), t_eval=t_eval,
                 method='RK45', rtol=1e-8, atol=1e-10)
+fig, axes = plt.subplots(2, 1, figsize=(9, 6), sharex=True)
 
-plt.plot(sol.t, sol.y[2])
-plt.xlabel('Time (s)')
-plt.ylabel('z (m)')
-plt.title('Quadrotor z position (hover)')
-plt.grid(True)
+axes[0].plot(sol.t, sol.y[0], color='steelblue')
+axes[0].set_ylabel('x (m)')
+axes[0].set_title('Quadrotor Position (hover + roll torque)')
+axes[0].grid(True)
+
+axes[1].plot(sol.t, sol.y[2], color='darkorange')
+axes[1].set_ylabel('z (m)')
+axes[1].set_xlabel('Time (s)')
+axes[1].grid(True)
+
+plt.tight_layout()
 plt.show()
